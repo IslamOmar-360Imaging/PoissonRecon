@@ -135,7 +135,7 @@ public:
 		//! This flag specifies the accuracy cut-off to be used for CG
 		float cgAccuracy = 1.0e-3f;
 
-		bool verbose = false;
+		bool verbose = true;
 	};
 
 	//! Input cloud interface
@@ -165,12 +165,6 @@ public:
 	static bool Reconstruct(Parameters& params,
 							const PoissonReconLib::ICloud<float>& inCloud,
 							PoissonReconLib::IMesh<float>& ouMesh);
-
-	//! Reconstruct a mesh from a point cloud (double version)
-	static bool Reconstruct(Parameters& params,
-							const PoissonReconLib::ICloud<double>& inCloud,
-							PoissonReconLib::IMesh<double>& ouMesh);
-
 };
 
 #endif // CC_POISSON_RECON_LIB_12_0_WRAPPER

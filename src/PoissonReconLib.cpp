@@ -44,8 +44,10 @@ namespace
 	constexpr int NORMAL_DEGREE = 2;
 	// The default finite-element degree
 	constexpr int DEFAULT_FEM_DEGREE = 1;
+	constexpr int DEFAULT_FEM_BOUNDARY = BOUNDARY_NEUMANN;
 	// The dimension of the system
 	constexpr int DIMENSION = 3;
+	constexpr int DEFAULT_DIMENSION = 3;
 
 	inline float
 	ComputeNorm(const float vec[3])
@@ -201,7 +203,7 @@ public:
 			return false;
 		}
 
-		auto p = x.template get<0>();
+		auto& p = x.template get<0>();
 		cloud.getPoint(currentIndex, p.coords);
 
 		if (xform != nullptr)
@@ -234,34 +236,102 @@ public:
 public:
 	const PoissonReconLib::ICloud<Real>& cloud;
 	XForm<Real, 4>* xform;
-	size_t currentIndex;
+	size_t currentIndex = 0;
 };
 
 template< unsigned int Dim , class Real >
 struct FEMTreeProfiler
 {
+#ifndef NDEBUG
 	double t;
 
-	void start( void ){ t = Time() , FEMTree< Dim , Real >::ResetLocalMemoryUsage(); }
-	void print( const char* header ) const
+	void
+	start(void)
 	{
-		FEMTree< Dim , Real >::MemoryUsage();
-		if( header ) printf( "%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n" , header , Time()-t , FEMTree< Dim , Real >::LocalMemoryUsage() , FEMTree< Dim , Real >::MaxMemoryUsage() , MemoryInfo::PeakMemoryUsageMB() );
-		else         printf(    "%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n" ,          Time()-t , FEMTree< Dim , Real >::LocalMemoryUsage() , FEMTree< Dim , Real >::MaxMemoryUsage() , MemoryInfo::PeakMemoryUsageMB() );
+		t = Time(), FEMTree<Dim, Real>::ResetLocalMemoryUsage();
 	}
-	void dumpOutput( const char* header ) const
+	void
+	print(const char* header) const
 	{
-		FEMTree< Dim , Real >::MemoryUsage();
-		if( header ) messageWriter( "%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n" , header , Time()-t , FEMTree< Dim , Real >::LocalMemoryUsage() , FEMTree< Dim , Real >::MaxMemoryUsage() , MemoryInfo::PeakMemoryUsageMB() );
-		else         messageWriter(    "%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n" ,          Time()-t , FEMTree< Dim , Real >::LocalMemoryUsage() , FEMTree< Dim , Real >::MaxMemoryUsage() , MemoryInfo::PeakMemoryUsageMB() );
+		FEMTree<Dim, Real>::MemoryUsage();
+		if (header)
+			printf(
+				"%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
+				header,
+				Time() - t,
+				FEMTree<Dim, Real>::LocalMemoryUsage(),
+				FEMTree<Dim, Real>::MaxMemoryUsage(),
+				MemoryInfo::PeakMemoryUsageMB());
+		else
+			printf(
+				"%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
+				Time() - t,
+				FEMTree<Dim, Real>::LocalMemoryUsage(),
+				FEMTree<Dim, Real>::MaxMemoryUsage(),
+				MemoryInfo::PeakMemoryUsageMB());
 	}
-	void dumpOutput2( std::vector< std::string >& comments , const char* header ) const
+	void
+	dumpOutput(const char* header) const
 	{
-		FEMTree< Dim , Real >::MemoryUsage();
-		if( header ) messageWriter( comments , "%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n" , header , Time()-t , FEMTree< Dim , Real >::LocalMemoryUsage() , FEMTree< Dim , Real >::MaxMemoryUsage() , MemoryInfo::PeakMemoryUsageMB() );
-		else         messageWriter( comments ,    "%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n" ,          Time()-t , FEMTree< Dim , Real >::LocalMemoryUsage() , FEMTree< Dim , Real >::MaxMemoryUsage() , MemoryInfo::PeakMemoryUsageMB() );
+		FEMTree<Dim, Real>::MemoryUsage();
+		if (header)
+			messageWriter(
+				"%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
+				header,
+				Time() - t,
+				FEMTree<Dim, Real>::LocalMemoryUsage(),
+				FEMTree<Dim, Real>::MaxMemoryUsage(),
+				MemoryInfo::PeakMemoryUsageMB());
+		else
+			messageWriter(
+				"%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
+				Time() - t,
+				FEMTree<Dim, Real>::LocalMemoryUsage(),
+				FEMTree<Dim, Real>::MaxMemoryUsage(),
+				MemoryInfo::PeakMemoryUsageMB());
 	}
+	void
+	dumpOutput2(std::vector<std::string>& comments, const char* header) const
+	{
+		FEMTree<Dim, Real>::MemoryUsage();
+		if (header)
+			messageWriter(
+				comments,
+				"%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
+				header,
+				Time() - t,
+				FEMTree<Dim, Real>::LocalMemoryUsage(),
+				FEMTree<Dim, Real>::MaxMemoryUsage(),
+				MemoryInfo::PeakMemoryUsageMB());
+		else
+			messageWriter(
+				comments,
+				"%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
+				Time() - t,
+				FEMTree<Dim, Real>::LocalMemoryUsage(),
+				FEMTree<Dim, Real>::MaxMemoryUsage(),
+				MemoryInfo::PeakMemoryUsageMB());
+	}
+#else
+	void
+	start(void)
+	{
+	}
+	void
+	print(const char* header) const
+	{
+	}
+	void
+	dumpOutput(const char* header) const
+	{
+	}
+	void
+	dumpOutput2(std::vector<std::string>& comments, const char* header) const
+	{
+	}
+#endif
 };
+
 template< class Real , unsigned int Dim >
 XForm< Real , Dim+1 > GetBoundingBoxXForm( Point< Real , Dim > min , Point< Real , Dim > max , Real scaleFactor )
 {
@@ -374,7 +444,7 @@ ExtractMesh(
 
 	typename IsoSurfaceExtractor<Dim, Real, Vertex>::IsoStats isoStats;
 
-	if (samples && sampleData)
+	if (sampleData)
 	{
 		typedef typename FEMTree<Dim, Real>::template DensityEstimator<WEIGHT_DEGREE>
 			DensityEstimator;
@@ -436,6 +506,11 @@ ExtractMesh(
 
 	mesh.resetIterator();
 
+	messageWriter(
+		"Vertices / Polygons: %llu / %llu\n",
+		(unsigned long long)(mesh.outOfCoreVertexNum() + mesh.inCoreVertices.size()),
+		(unsigned long long)mesh.polygonNum());
+
 	for (size_t vidx = 0; vidx < mesh.outOfCoreVertexNum(); ++vidx)
 	{
 		Vertex v;
@@ -467,6 +542,8 @@ ExtractMesh(
 			assert(false);
 		}
 	}
+	std::string isoStatsString = isoStats.toString() + std::string("\n");
+	messageWriter( isoStatsString.c_str() );
 }
 
 // workhorse
@@ -524,19 +601,21 @@ Execute(
 	size_t pointCount;
 
 	Real pointWeightSum;
-	std::vector< typename FEMTree< Dim , Real >::PointSample >* samples = new std::vector< typename FEMTree< Dim , Real >::PointSample >();
 	typedef PointData<Real> InputSampleDataType;
 	typedef std::vector<PointData<Real>> SampleDataSet;
+	typedef std::vector<typename FEMTree<Dim, Real>::PointSample> SampleSet;
 	DenseNodeData< GeometryNodeType , IsotropicUIntPack< Dim , FEMTrivialSignature > > geometryNodeDesignators;
-	std::vector<InputSampleDataType>* sampleData = NULL;
 	DensityEstimator* density = NULL;
 	SparseNodeData< Point< Real , Dim > , NormalSigs >* normalInfo = NULL;
 	Real targetValue = (Real)0.5;
+	std::unique_ptr<SampleSet> samples;
+	std::unique_ptr<SampleDataSet> sampleData;
 
 	// Read in the samples (and color data)
 	{
-		sampleData = new std::vector<InputSampleDataType>();
 		profiler.start();
+		samples.reset(new SampleSet);
+		sampleData.reset(new SampleDataSet);
 		if( params.finestCellWidth>0 )
 		{
 			if( params.solveDepth == 0 ) params.solveDepth = params.depth;
@@ -582,6 +661,11 @@ Execute(
 		}
 
 		unitCubeToModel = modelToUnitCube.inverse();
+		messageWriter(
+			"Input Points / Samples: %llu / %llu\n",
+			(unsigned long long)pointCount,
+			(unsigned long long)samples->size());
+		profiler.dumpOutput("# Read input into tree:");
 	}
 
 	DenseNodeData< Real , Sigs > solution;
@@ -599,6 +683,7 @@ Execute(
 				*samples,
 				params.kernelDepth,
 				params.samplesPerNode);
+			profiler.dumpOutput("#   Got kernel density:");
 		}
 
 		// Transform the Hermite samples into a vector field
@@ -638,6 +723,8 @@ Execute(
 					pointWeightSum,
 					ConversionFunction);
 			ThreadPool::Parallel_for( 0 , normalInfo->size() , [&]( unsigned int , size_t i ){ (*normalInfo)[i] *= (Real)-1.; } );
+			profiler.dumpOutput("#     Got normal field:");
+			messageWriter("Point weight / Estimated Measure: %g / %g\n", pointWeightSum, pointCount * pointWeightSum);
 		}
 
 		// Get the geometry designators indicating if the space node are interior to, exterior to, or contain the envelope boundary
@@ -758,6 +845,10 @@ Execute(
 		}
 
 		if( !params.withDensity ) delete density , density = NULL;
+		if (!params.withColors || params.colorPullFactor == 0)
+		{
+			sampleData.reset();
+		}
 
 		// Add the interpolation constraints
 		if( params.pointWeight>0 )
@@ -785,6 +876,7 @@ Execute(
 						SystemDual<Dim, Real>((Real)params.pointWeight * pointWeightSum),
 						true,
 						1);
+			profiler.dumpOutput("#Initialized point interpolation constraints:");
 		}
 
 		// Trim the tree and prepare for multigrid
@@ -795,7 +887,7 @@ Execute(
 			auto hasDataFunctor = [&]( const FEMTreeNode *node ){ return hasNormalDataFunctor( node ); };
 			if( geometryNodeDesignators.size() ) tree.template finalizeForMultigrid< MAX_DEGREE , Degrees::Max() >( params.baseDepth , params.fullDepth , hasDataFunctor , [&]( const FEMTreeNode *node ){ return node->nodeData.nodeIndex<(node_index_type)geometryNodeDesignators.size() && geometryNodeDesignators[node]==GeometryNodeType::EXTERIOR; } , std::make_tuple( iInfo ) , std::make_tuple( normalInfo , density , &geometryNodeDesignators ) );
 			else                                 tree.template finalizeForMultigrid< MAX_DEGREE , Degrees::Max() >( params.baseDepth , params.fullDepth , hasDataFunctor , []( const FEMTreeNode * ){ return false; } , std::make_tuple( iInfo ) , std::make_tuple( normalInfo , density ) );
-
+			profiler.dumpOutput("#       Finalized tree:");
 		}
 		// Add the FEM constraints
 		{
@@ -813,6 +905,7 @@ Execute(
 				F.weights[d][ TensorDerivatives< Derivatives1 >::Index( derivatives1 ) ][ TensorDerivatives< Derivatives2 >::Index( derivatives2 ) ] = 1;
 			}
 			tree.addFEMConstraints( F , *normalInfo , constraints , solveDepth );
+			profiler.dumpOutput("#  Set FEM constraints:");
 		}
 
 		// Free up the normal info
@@ -823,6 +916,7 @@ Execute(
 		{
 			profiler.start();
 			tree.addInterpolationConstraints( constraints , solveDepth , std::make_tuple( iInfo ) );
+			profiler.dumpOutput("#Set point constraints:");
 		}
 
 		messageWriter( "Leaf Nodes / Active Nodes / Ghost Nodes / Dirichlet Supported Nodes: %llu / %llu / %llu / %llu\n" , (unsigned long long)tree.leaves() , (unsigned long long)tree.nodes() , (unsigned long long)tree.ghostNodes() , (unsigned long long)tree.dirichletElements() );
@@ -836,6 +930,7 @@ Execute(
 			sInfo.baseVCycles = params.baseVCycles;
 			typename FEMIntegrator::template System< Sigs , IsotropicUIntPack< Dim , 1 > > F( { 0. , 1. } );
 			solution = tree.solveSystem( Sigs() , F , constraints , params.solveDepth , sInfo , std::make_tuple( iInfo ) );
+			profiler.dumpOutput("# Linear system solved:");
 			if( iInfo ) delete iInfo , iInfo = NULL;
 		}
 	}
@@ -854,7 +949,10 @@ Execute(
 		);
 		for( size_t t=0 ; t<valueSums.size() ; t++ ) valueSum += valueSums[t] , weightSum += weightSums[t];
 		isoValue = (Real)( valueSum / weightSum );
-		delete samples, samples = NULL;
+		if (!params.withColors || params.colorPullFactor == 0)
+		{
+			samples.reset();
+		}
 		profiler.dumpOutput( "Got average:" );
 		messageWriter( "Iso-Value: %e = %g / %g\n" , isoValue , valueSum , weightSum );
 	}
@@ -873,12 +971,14 @@ Execute(
 		tree,
 		solution,
 		isoValue,
-		samples,
-		sampleData,
+		samples.get(),
+		sampleData.get(),
 		density,
 		SetVertex,
-		unitCubeToModel.inverse(),
+		unitCubeToModel,
 		out_mesh);
+
+	return true;
 }
 
 bool
@@ -891,6 +991,46 @@ PoissonReconLib::Reconstruct(
 	{
 		// we need normals
 		return false;
+	}
+
+	if (params.baseDepth == 0)
+		params.baseDepth = params.fullDepth;
+	if (params.solveDepth == 0)
+		params.solveDepth = params.depth;
+
+	if (params.baseDepth > params.fullDepth)
+	{
+		WARN("Base depth must be smaller than full depth: ", params.baseDepth, " <= ", params.fullDepth);
+		params.baseDepth = params.fullDepth;
+	}
+	if (params.solveDepth > params.depth)
+	{
+		WARN("Solution depth cannot exceed system depth: ", params.solveDepth, " <= ", params.depth);
+		params.solveDepth = params.depth;
+	}
+	if (params.kernelDepth == 0)
+	  params.kernelDepth = params.depth- 2;
+	if (params.kernelDepth > params.depth)
+	{
+		WARN("Kernel depth should not exceed depth: ", params.kernelDepth, " <= ", params.depth);
+		params.kernelDepth = params.depth;
+	}
+
+	if (params.envelopeDepth == 0)
+		params.envelopeDepth = params.baseDepth;
+	if (params.envelopeDepth > params.depth)
+	{
+		WARN("envelope depth can't be greater than depth: ", params.envelopeDepth, " <= ", params.depth);
+		params.envelopeDepth = params.depth;
+	}
+	if (params.envelopeDepth < params.baseDepth)
+	{
+		WARN(
+			"envelop depth can't be less than base depth: ",
+			params.envelopeDepth,
+			" >= ",
+			params.baseDepth);
+		params.envelopeDepth = params.baseDepth;
 	}
 
 #ifdef WITH_OPENMP
@@ -929,65 +1069,6 @@ PoissonReconLib::Reconstruct(
 			FEMDegreeAndBType<DEFAULT_FEM_DEGREE, BOUNDARY_NEUMANN>::Signature>
 			FEMSigsNeumann;
 		success = Execute<float>(pointStream, outMesh, params, FEMSigsNeumann());
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	ThreadPool::Terminate();
-
-	return success;
-}
-
-bool
-PoissonReconLib::Reconstruct(
-	Parameters& params,
-	const ICloud<double>& inCloud,
-	IMesh<double>& outMesh)
-{
-	if (!inCloud.hasNormals())
-	{
-		// we need normals
-		return false;
-	}
-
-#ifdef WITH_OPENMP
-	ThreadPool::Init(
-		(ThreadPool::ParallelType)(int)ThreadPool::OPEN_MP,
-		std::thread::hardware_concurrency());
-#else
-	ThreadPool::Init(
-		(ThreadPool::ParallelType)(int)ThreadPool::THREAD_POOL,
-		std::thread::hardware_concurrency());
-#endif
-
-	PointStream<double> pointStream(inCloud);
-
-	bool success = false;
-
-	switch (params.boundary)
-	{
-	case Parameters::FREE:
-		typedef IsotropicUIntPack<
-			DIMENSION,
-			FEMDegreeAndBType<DEFAULT_FEM_DEGREE, BOUNDARY_FREE>::Signature>
-			FEMSigsFree;
-		success = Execute<double>(pointStream, outMesh, params, FEMSigsFree());
-		break;
-	case Parameters::DIRICHLET:
-		typedef IsotropicUIntPack<
-			DIMENSION,
-			FEMDegreeAndBType<DEFAULT_FEM_DEGREE, BOUNDARY_DIRICHLET>::Signature>
-			FEMSigsDirichlet;
-		success = Execute<double>(pointStream, outMesh, params, FEMSigsDirichlet());
-		break;
-	case Parameters::NEUMANN:
-		typedef IsotropicUIntPack<
-			DIMENSION,
-			FEMDegreeAndBType<DEFAULT_FEM_DEGREE, BOUNDARY_NEUMANN>::Signature>
-			FEMSigsNeumann;
-		success = Execute<double>(pointStream, outMesh, params, FEMSigsNeumann());
 		break;
 	default:
 		assert(false);
