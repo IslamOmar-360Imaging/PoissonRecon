@@ -528,13 +528,14 @@ Execute(
 	typedef PointData<Real> InputSampleDataType;
 	typedef std::vector<PointData<Real>> SampleDataSet;
 	DenseNodeData< GeometryNodeType , IsotropicUIntPack< Dim , FEMTrivialSignature > > geometryNodeDesignators;
-	SampleDataSet* sampleData = NULL;
+	std::vector<InputSampleDataType>* sampleData = NULL;
 	DensityEstimator* density = NULL;
 	SparseNodeData< Point< Real , Dim > , NormalSigs >* normalInfo = NULL;
 	Real targetValue = (Real)0.5;
 
 	// Read in the samples (and color data)
 	{
+		sampleData = new std::vector<InputSampleDataType>();
 		profiler.start();
 		if( params.finestCellWidth>0 )
 		{
