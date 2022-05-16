@@ -99,7 +99,7 @@ public:
 		bool withNoDirichletErode = true;;
 
 		//! Data pull factor
-		/** If withColors is rue, this floating point value specifies the relative importance of finer color estimates over lower ones.
+		/** If withColors is true, this floating point value specifies the relative importance of finer color estimates over lower ones.
 		**/
 		float colorPullFactor = 32.0f;
 
@@ -135,7 +135,7 @@ public:
 		//! This flag specifies the accuracy cut-off to be used for CG
 		float cgAccuracy = 1.0e-3f;
 
-		bool verbose = true;
+		bool verbose = false;
 	};
 
 	//! Input cloud interface

@@ -31,7 +31,16 @@
 #include <cassert>
 #include <limits>
 
-MessageWriter messageWriter;
+MessageWriter _messageWriter;
+
+template<class... Ts>
+static inline void
+messageWriter(const char* format, Ts... args)
+{
+#ifndef NDEBUG
+	_messageWriter(format, args...);
+#endif
+}
 
 namespace
 {
@@ -173,10 +182,6 @@ using InputPointStream =
 template <typename Real, unsigned int Dim, typename FunctionValueType = PointData<Real>>
 using InputPointStreamWithData = InputPointStream<Real, Dim, FunctionValueType>;
 
-// template <typename Real, unsigned int dim>
-// using InputPointStream = typename FEMTreeInitializer<dim,Real>::template
-// InputPointStream<PointData<Real>>::StreamType;
-
 template <typename Real>
 class PointStream : public InputPointStreamWithData<Real, DIMENSION, PointData<Real>>
 {
@@ -251,26 +256,6 @@ struct FEMTreeProfiler
 		t = Time(), FEMTree<Dim, Real>::ResetLocalMemoryUsage();
 	}
 	void
-	print(const char* header) const
-	{
-		FEMTree<Dim, Real>::MemoryUsage();
-		if (header)
-			printf(
-				"%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
-				header,
-				Time() - t,
-				FEMTree<Dim, Real>::LocalMemoryUsage(),
-				FEMTree<Dim, Real>::MaxMemoryUsage(),
-				MemoryInfo::PeakMemoryUsageMB());
-		else
-			printf(
-				"%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
-				Time() - t,
-				FEMTree<Dim, Real>::LocalMemoryUsage(),
-				FEMTree<Dim, Real>::MaxMemoryUsage(),
-				MemoryInfo::PeakMemoryUsageMB());
-	}
-	void
 	dumpOutput(const char* header) const
 	{
 		FEMTree<Dim, Real>::MemoryUsage();
@@ -284,28 +269,6 @@ struct FEMTreeProfiler
 				MemoryInfo::PeakMemoryUsageMB());
 		else
 			messageWriter(
-				"%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
-				Time() - t,
-				FEMTree<Dim, Real>::LocalMemoryUsage(),
-				FEMTree<Dim, Real>::MaxMemoryUsage(),
-				MemoryInfo::PeakMemoryUsageMB());
-	}
-	void
-	dumpOutput2(std::vector<std::string>& comments, const char* header) const
-	{
-		FEMTree<Dim, Real>::MemoryUsage();
-		if (header)
-			messageWriter(
-				comments,
-				"%s %9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
-				header,
-				Time() - t,
-				FEMTree<Dim, Real>::LocalMemoryUsage(),
-				FEMTree<Dim, Real>::MaxMemoryUsage(),
-				MemoryInfo::PeakMemoryUsageMB());
-		else
-			messageWriter(
-				comments,
 				"%9.1f (s), %9.1f (MB) / %9.1f (MB) / %d (MB)\n",
 				Time() - t,
 				FEMTree<Dim, Real>::LocalMemoryUsage(),
@@ -318,15 +281,7 @@ struct FEMTreeProfiler
 	{
 	}
 	void
-	print(const char* header) const
-	{
-	}
-	void
 	dumpOutput(const char* header) const
-	{
-	}
-	void
-	dumpOutput2(std::vector<std::string>& comments, const char* header) const
 	{
 	}
 #endif
