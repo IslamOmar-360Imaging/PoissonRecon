@@ -15,8 +15,7 @@ CPMAddPackage(
 	DOWNLOAD_ONLY
 )
 
-# add_library( ${PROJECT_NAME} STATIC )
-add_library(${PROJECT_NAME})
+add_library( ${PROJECT_NAME} STATIC )
 
 # To remove very annoying "NO ARGUMENTS THAT DEPEND ON A TEMPLATE PARAMETER" errors with G++!
 if( UNIX OR MINGW )
