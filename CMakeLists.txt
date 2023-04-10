@@ -11,7 +11,7 @@ include(CPM)
 CPMAddPackage(
 	NAME             PoissonRecon
 	GIT_REPOSITORY   git@github.com:mkazhdan/PoissonRecon.git
-	GIT_TAG          f1c71fe491828d00d34f95de9c264d4bf3481d61
+	GIT_TAG          0fc87ebca1d790555656b34ef2dc66a7eca57e0d
 	DOWNLOAD_ONLY
 )
 

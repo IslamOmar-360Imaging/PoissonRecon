@@ -1,3 +1,3 @@
 # PoissonRecon
 
-modified from [PoissonRecon](https://github.com/CloudCompare/PoissonRecon) to the latest PoissonRecon version [13.74](https://github.com/mkazhdan/PoissonRecon)
+modified from [PoissonRecon](https://github.com/CloudCompare/PoissonRecon) and [PoissonRecon](https://github.com/mkazhdan/PoissonRecon).
